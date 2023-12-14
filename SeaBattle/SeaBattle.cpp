@@ -3,6 +3,12 @@
 #include <stdlib.h>
 #include "windows.h"
 
+void ClearInput()
+{
+	std::cin.clear();
+	std::cin.ignore();
+}
+
 void printTableString(char table[10])
 {
 	for (int j = 0; j < 10; j++)
@@ -52,7 +58,7 @@ void printDelay(std::string textForDelay)
 	{
 		if (checkEnter == false)
 		{
-			if (GetAsyncKeyState(VK_RETURN) == -32767)
+			if (GetAsyncKeyState(VK_RETURN) & 0x8000)
 				checkEnter = true;
 			else
 				Sleep(delayPrint);
@@ -79,6 +85,7 @@ void rulesPrint(int rulesCh)
 	{
 		system("cls");
 		std::cout << "Неверный пункт меню. Хотите ознакомиться с правилами?\n" << std::endl;
+		ClearInput();
 	}
 }
 
@@ -93,8 +100,9 @@ void tutorial()
 	{	
 		std::cout << "1 - Да\n\n";
 		std::cout << "2 - Нет, хочу начать игру!\n\n";
-
+		
 		std::cin >> rulesChoice;
+
 		system("cls");
 		rulesPrint(rulesChoice);
 
@@ -122,6 +130,7 @@ void gameModeChoice(std::string modeQuestion, std::string modeOne, std::string m
 		{
 			system("cls");
 			std::cout << "Неверный пункт меню\n" << std::endl;
+			ClearInput();
 		}
 
 	} while (choiceMode < 1 || choiceMode > 2);
@@ -197,15 +206,15 @@ void gameLoop()
 
 		//стреляет компьютер
 
-		for (;;)
+		while (true)
 		{
 			std::cin >> col >> row;
 
 			if (std::cin.fail() || row < 1 || row > 10 || col < 'a' || col > 'j')
 			{
 				std::cout << "Некорректные координаты. Введите заново: " << std::endl;
-				std::cin.clear();
-				std::cin.ignore();
+				ClearInput();
+
 				continue;
 			}
 			break;
