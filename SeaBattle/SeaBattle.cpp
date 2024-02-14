@@ -3,13 +3,17 @@
 #include <stdlib.h>
 #include "windows.h"
 
+struct sea_field {
+	char table[10][10];
+};
+
 void ClearInput()
 {
 	std::cin.clear();
 	std::cin.ignore();
 }
 
-void printTableString(char table[10])
+void printTableString(const char table[10])
 {
 	for (int j = 0; j < 10; j++)
 		std::cout << std::setw(2) << table[j];
@@ -23,7 +27,7 @@ void printLetters()
 		std::cout << std::setw(2) << letters[k];
 }
 
-void printTables(char firstTable[10][10], char secondTable[10][10])
+void printTables(const sea_field& firstTable, const sea_field& secondTable)
 {
 	std::cout << std::setw(4) << "";
 	printLetters();
@@ -37,9 +41,9 @@ void printTables(char firstTable[10][10], char secondTable[10][10])
 	for (int i = 0; i < 10; i++)
 	{
 		std::cout << std::setw(3) << i + 1 << '|';
-		printTableString(firstTable[i]);
+		printTableString(firstTable.table[i]);
 		std::cout << " | " << std::setw(3) << i + 1 << '|';
-		printTableString(secondTable[i]);
+		printTableString(secondTable.table[i]);
 		std::cout << " | " << std::endl;
 	}
 
@@ -138,13 +142,13 @@ void gameModeChoice(std::string modeQuestion, std::string modeOne, std::string m
 	system("cls");
 }
 
-bool allShipsDestroyed(char table[10][10])
+bool allShipsDestroyed(const sea_field& field)
 {
 	for (int i = 0; i < 10; i++)
 	{
 		for (int j = 0; j < 10; j++)
 		{
-			if (table[i][j] == '#')
+			if (field.table[i][j] == '#')
 				return false;
 		}
 	}
@@ -152,53 +156,108 @@ bool allShipsDestroyed(char table[10][10])
 	return true;
 }
 
-void gameLoop()
+void autoShipsPlacement(sea_field& field)
 {
-	char tableOne[10][10]{};
-	char tableTwo[10][10]{};
-
 	for (int i = 0; i < 10; i++)
 		for (int j = 0; j < 10; j++)
+			field.table[i][j] = '~';
+
+	for (int shipSize = 4; shipSize >= 1; shipSize--)
+	{
+		for (int shipNumber = 5 - shipSize; shipNumber > 0; shipNumber--)
 		{
-			tableOne[i][j] = '#';
-			tableTwo[i][j] = '~';
+			bool repeat = true;
+			int dir = rand() % 4;
+			int i, j;
+
+			while (repeat)
+			{
+				i = rand() % 10;
+				j = rand() % 10;
+
+				for (int k = 0; k < shipSize; k++)
+				{
+					if (field.table[i][j] == '~')
+					{
+						if (field.table[i + 1][j] == '~' && field.table[i - 1][j] == '~' && field.table[i][j + 1] == '~' && field.table[i][j - 1] == '~')
+						{
+							switch (dir)
+							{
+							case 0:
+								i++;
+								break;
+							case 1:
+								i--;
+								break;
+							case 2:
+								j++;
+								break;
+							case 3:
+								j--;
+								break;
+							}
+							repeat = false;
+						}
+						else
+							break;
+					}
+					else
+					{
+						repeat = true;
+					}
+				}
+			}
+
+			for (int k = 0; k < shipSize; k++)
+			{
+				switch (dir)
+				{
+				case 0:
+					i--;
+					break;
+				case 1:
+					i++;
+					break;
+				case 2:
+					j--;
+					break;
+				case 3:
+					j++;
+					break;
+				}
+				field.table[i][j] = '#';
+			}
 		}
+	}
+}
 
-	tableTwo[2][3] = '#';
-	tableTwo[2][4] = '#';
-	tableTwo[2][5] = '#';
+void gameLoop()
+{
+	sea_field tableOne{};
+	sea_field tableTwo{};
 
-	tableTwo[5][6] = '#';
-	tableTwo[5][7] = '#';
-	tableTwo[5][8] = '#';
+	autoShipsPlacement(tableOne);
+	autoShipsPlacement(tableTwo);
 
-	tableTwo[0][9] = '#';
-	tableTwo[1][9] = '#';
-	tableTwo[2][9] = '#';
-
-	tableTwo[4][0] = '#';
-	tableTwo[5][0] = '#';
-	tableTwo[6][0] = '#';
-	tableTwo[7][0] = '#';
-
-	while (!allShipsDestroyed(tableOne) && !allShipsDestroyed(tableTwo))
+	while (!allShipsDestroyed(tableOne) || !allShipsDestroyed(tableTwo))
 	{
 		system("cls");
 
-		char hiddenTableTwo[10][10]{};
+		sea_field hiddenTableTwo{};
 
 		for (int i = 0; i < 10; i++)
 		{
 			for (int j = 0; j < 10; j++)
 			{
-				if (tableTwo[i][j] == '#')
-					hiddenTableTwo[i][j] = '~';
+				if (tableTwo.table[i][j] == '#')
+					hiddenTableTwo.table[i][j] = '~';
 				else
-					hiddenTableTwo[i][j] = tableTwo[i][j];
+					hiddenTableTwo.table[i][j] = tableTwo.table[i][j];
 			}
 		}
 
-		printTables(tableOne, hiddenTableTwo);
+		
+		printTables(tableOne, tableTwo); //hidden
 		std::cout << "Введите координаты выстрела: " << std::endl;
 
 		char col;
@@ -220,21 +279,22 @@ void gameLoop()
 			break;
 		}
 
-		if (tableTwo[row - 1][col - 'a'] == '#')
-			tableTwo[row - 1][col - 'a'] = 'X';
+		if (tableTwo.table[row - 1][col - 'a'] == '#')
+			tableTwo.table[row - 1][col - 'a'] = 'X';
 		else
-			tableTwo[row - 1][col - 'a'] = '*';
+			tableTwo.table[row - 1][col - 'a'] = '*';
 	}
 
 	if (allShipsDestroyed(tableOne))
 		std::cout << "Игрок 2 победил!" << std::endl;
-	else
+	else if (allShipsDestroyed(tableTwo))
 		std::cout << "Игрок 1 победил!" << std::endl;
 }
 
 int main()
 {
 	setlocale(LC_ALL, "Russian");
+	srand(static_cast<unsigned int>(time(NULL)));
 	system("color 3F");
 	
 	tutorial();
