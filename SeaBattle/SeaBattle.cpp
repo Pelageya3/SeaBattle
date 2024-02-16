@@ -127,9 +127,11 @@ void gameModeChoice(std::string modeQuestion, std::string modeOne, std::string m
 		std::cin >> choiceMode;
 
 		if (choiceMode == 1)
-			std::cout << "1";
+			//func();
+			std::cout << "ок";
 		else if (choiceMode == 2)
-			std::cout << "2";
+			//func2();
+			std::cout << "ок";
 		else
 		{
 			system("cls");
@@ -156,6 +158,77 @@ bool allShipsDestroyed(const sea_field& field)
 	return true;
 }
 
+bool isShipSegmentPlaceable(int i, int j, sea_field& field)
+{
+	if (i < 0 || i > 9 || j < 0 || j > 9)
+		return false;
+	for (int v = i - 1; v <= i + 1; v++)
+		for (int b = j - 1; b <= j + 1; b++)
+		{
+			if (v < 0 || v > 9 || b < 0 || b > 9)
+				continue;
+			if (field.table[v][b] == '#')
+				return false;
+		}
+	return true;
+}
+
+void directionalCoordinateMove(int& i, int& j, int dir)
+{
+	switch (dir)
+	{
+	case 0:
+		i--;
+		break;
+	case 1:
+		i++;
+		break;
+	case 2:
+		j--;
+		break;
+	case 3:
+		j++;
+		break;
+	}
+}
+	
+bool isShipPlaceable(int i, int j, int dir, sea_field& field, int shipSize)
+{
+	for (int k = 0; k < shipSize; k++)
+	{
+		if (!isShipSegmentPlaceable(i, j, field))
+			return false;
+		directionalCoordinateMove(i, j, dir);
+	}
+	return true;
+}
+
+void shipsPrint(int i, int j, int dir, int shipSize, sea_field& field)
+{
+	for (int k = 0; k < shipSize; k++)
+	{
+		field.table[i][j] = '#';
+		directionalCoordinateMove(i, j, dir);
+	}
+}
+
+void checkCoordinates(char& col, int& row)
+{
+	while (true)
+	{
+		std::cin >> col >> row;
+
+		if (std::cin.fail() || row < 1 || row > 10 || col < 'a' || col > 'j')
+		{
+			std::cout << "Некорректные координаты. Введите заново: " << std::endl;
+			ClearInput();
+
+			continue;
+		}
+		break;
+	}
+}
+
 void autoShipsPlacement(sea_field& field)
 {
 	for (int i = 0; i < 10; i++)
@@ -166,78 +239,60 @@ void autoShipsPlacement(sea_field& field)
 	{
 		for (int shipNumber = 5 - shipSize; shipNumber > 0; shipNumber--)
 		{
-			bool repeat = true;
-			int dir = rand() % 4;
+			int dir;
 			int i, j;
 
-			while (repeat)
+			while (true)
 			{
 				i = rand() % 10;
 				j = rand() % 10;
+				dir = rand() % 4;
 
-				for (int k = 0; k < shipSize; k++)
-				{
-					if (field.table[i][j] == '~')
-					{
-						if (field.table[i + 1][j] == '~' && field.table[i - 1][j] == '~' && field.table[i][j + 1] == '~' && field.table[i][j - 1] == '~')
-						{
-							switch (dir)
-							{
-							case 0:
-								i++;
-								break;
-							case 1:
-								i--;
-								break;
-							case 2:
-								j++;
-								break;
-							case 3:
-								j--;
-								break;
-							}
-							repeat = false;
-						}
-						else
-							break;
-					}
-					else
-					{
-						repeat = true;
-					}
-				}
+				if (isShipPlaceable(i, j, dir, field, shipSize))
+					break;
 			}
-
-			for (int k = 0; k < shipSize; k++)
-			{
-				switch (dir)
-				{
-				case 0:
-					i--;
-					break;
-				case 1:
-					i++;
-					break;
-				case 2:
-					j--;
-					break;
-				case 3:
-					j++;
-					break;
-				}
-				field.table[i][j] = '#';
-			}
+			shipsPrint(i, j, dir, shipSize, field);
 		}
 	}
 }
+
+void manualShipsPlacement(sea_field& field)
+{
+	int i, j, num, shipSize;
+	char let;
+	
+	for (shipSize = 4; shipSize >= 1; shipSize--)
+	{
+		for (int shipNumber = 5 - shipSize; shipNumber > 0; shipNumber--)
+		{
+			std::cout << "Введите начальную и конечную координату (" << shipSize << "-палубник):" << std::endl;
+			checkCoordinates(let, num);
+			int startLet = let;
+			int startNum = num;
+			checkCoordinates(let, num);
+			int endLet = let;
+			int endNum = num;
+
+			if (startLet == endLet)
+				if (endNum - startNum == shipSize - 1 && startLet == endLet || endLet - startLet == shipSize - 1 && startNum == endNum)
+					for (i = startNum, j = startLet; i < endNum && j < endLet; i++, j++)
+						if (isShipPlaceable(i, j, dir, field, shipSize))
+							break;
+		
+			shipsPrint(i, j, dir, shipSize, field);
+		}
+	}
+}
+
 
 void gameLoop()
 {
 	sea_field tableOne{};
 	sea_field tableTwo{};
 
-	autoShipsPlacement(tableOne);
+	manualShipsPlacement(tableOne);
 	autoShipsPlacement(tableTwo);
+
 
 	while (!allShipsDestroyed(tableOne) || !allShipsDestroyed(tableTwo))
 	{
@@ -265,19 +320,7 @@ void gameLoop()
 
 		//стреляет компьютер
 
-		while (true)
-		{
-			std::cin >> col >> row;
-
-			if (std::cin.fail() || row < 1 || row > 10 || col < 'a' || col > 'j')
-			{
-				std::cout << "Некорректные координаты. Введите заново: " << std::endl;
-				ClearInput();
-
-				continue;
-			}
-			break;
-		}
+		checkCoordinates(col, row);
 
 		if (tableTwo.table[row - 1][col - 'a'] == '#')
 			tableTwo.table[row - 1][col - 'a'] = 'X';
