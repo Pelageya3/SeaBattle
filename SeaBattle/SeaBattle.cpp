@@ -61,12 +61,10 @@ void printDelay(std::string textForDelay)
 	for (int i = 0; i < textForDelay.length(); i++)
 	{
 		if (checkEnter == false)
-		{
 			if (GetAsyncKeyState(VK_RETURN) & 0x8000)
 				checkEnter = true;
 			else
 				Sleep(delayPrint);
-		}
 
 		std::cout << textForDelay[i];
 	}
@@ -147,13 +145,11 @@ void gameModeChoice(std::string modeQuestion, std::string modeOne, std::string m
 bool allShipsDestroyed(const sea_field& field)
 {
 	for (int i = 0; i < 10; i++)
-	{
 		for (int j = 0; j < 10; j++)
 		{
 			if (field.table[i][j] == '#')
 				return false;
 		}
-	}
 
 	return true;
 }
@@ -222,7 +218,6 @@ void checkCoordinates(char& col, int& row)
 		{
 			std::cout << "Некорректные координаты. Введите заново: " << std::endl;
 			ClearInput();
-
 			continue;
 		}
 		break;
@@ -236,7 +231,6 @@ void autoShipsPlacement(sea_field& field)
 			field.table[i][j] = '~';
 
 	for (int shipSize = 4; shipSize >= 1; shipSize--)
-	{
 		for (int shipNumber = 5 - shipSize; shipNumber > 0; shipNumber--)
 		{
 			int dir;
@@ -253,7 +247,6 @@ void autoShipsPlacement(sea_field& field)
 			}
 			shipsPrint(i, j, dir, shipSize, field);
 		}
-	}
 }
 
 void manualShipsPlacement(sea_field& field)
@@ -262,7 +255,6 @@ void manualShipsPlacement(sea_field& field)
 	char let;
 	
 	for (shipSize = 4; shipSize >= 1; shipSize--)
-	{
 		for (int shipNumber = 5 - shipSize; shipNumber > 0; shipNumber--)
 		{
 			std::cout << "Введите начальную и конечную координату (" << shipSize << "-палубник):" << std::endl;
@@ -273,17 +265,14 @@ void manualShipsPlacement(sea_field& field)
 			int endLet = let;
 			int endNum = num;
 
-			if (startLet == endLet)
-				if (endNum - startNum == shipSize - 1 && startLet == endLet || endLet - startLet == shipSize - 1 && startNum == endNum)
-					for (i = startNum, j = startLet; i < endNum && j < endLet; i++, j++)
-						if (isShipPlaceable(i, j, dir, field, shipSize))
-							break;
+			if (endNum - startNum == shipSize - 1 && startLet == endLet || endLet - startLet == shipSize - 1 && startNum == endNum)
+				for (i = startNum, j = startLet; i < endNum && j < endLet; i++, j++)
+					if (isShipPlaceable(i, j, dir, field, shipSize))
+						break;
 		
 			shipsPrint(i, j, dir, shipSize, field);
 		}
-	}
 }
-
 
 void gameLoop()
 {
@@ -293,7 +282,6 @@ void gameLoop()
 	manualShipsPlacement(tableOne);
 	autoShipsPlacement(tableTwo);
 
-
 	while (!allShipsDestroyed(tableOne) || !allShipsDestroyed(tableTwo))
 	{
 		system("cls");
@@ -301,7 +289,6 @@ void gameLoop()
 		sea_field hiddenTableTwo{};
 
 		for (int i = 0; i < 10; i++)
-		{
 			for (int j = 0; j < 10; j++)
 			{
 				if (tableTwo.table[i][j] == '#')
@@ -309,9 +296,7 @@ void gameLoop()
 				else
 					hiddenTableTwo.table[i][j] = tableTwo.table[i][j];
 			}
-		}
 
-		
 		printTables(tableOne, tableTwo); //hidden
 		std::cout << "Введите координаты выстрела: " << std::endl;
 
