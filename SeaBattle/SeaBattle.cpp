@@ -2,6 +2,9 @@
 #include <iomanip>
 #include <stdlib.h>
 #include "windows.h"
+#include <fstream>
+#include <string>
+
 
 struct sea_field {
 	char table[10][10];
@@ -92,7 +95,12 @@ void printDelay(std::string textForDelay)
 
 void rulesPrint(int rulesCh)
 {
-	std::string rules = "ляляляля правила такие-то";
+	std::ifstream rulesFile("rules.txt");
+	std::string line, rules;
+	
+	while (std::getline(rulesFile, line))
+		rules += line + '\n';
+	rulesFile.close();
 
 	if (rulesCh == 1)
 	{
@@ -340,13 +348,18 @@ void replaceWithMiss(int i, int j, sea_field& table)
 		}
 }
 
-void destroyShipIfPossible(int i, int j, sea_field& table)
+int destroyShipIfPossible(int i, int j, sea_field& table)
 {
+	enum intellect
+	{
+		intellUp, intellDown, intellLeft, intellRight
+	};
+
 	int up = i;
 	for (up = i; up >= 0; up--)
 	{
 		if (table.table[up][j] == '#')
-			return;
+			return intellUp;
 		if (table.table[up][j] == '*' || table.table[up][j] == '~')
 			break;
 	}
@@ -355,7 +368,7 @@ void destroyShipIfPossible(int i, int j, sea_field& table)
 	for (down = i; down < 10; down++)
 	{
 		if (table.table[down][j] == '#')
-			return;
+			return intellDown;
 		if (table.table[down][j] == '*' || table.table[down][j] == '~')
 			break;
 	}
@@ -364,7 +377,7 @@ void destroyShipIfPossible(int i, int j, sea_field& table)
 	for (left = j; left >= 0; left--)
 	{
 		if (table.table[i][left] == '#')
-			return;
+			return intellLeft;
 		if (table.table[i][left] == '*' || table.table[i][left] == '~')
 			break;
 	}
@@ -373,7 +386,7 @@ void destroyShipIfPossible(int i, int j, sea_field& table)
 	for (right = j; right < 10; right++)
 	{
 		if (table.table[i][right] == '#')
-			return;
+			return intellRight;
 		if (table.table[i][right] == '*' || table.table[i][right] == '~')
 			break;
 	}
@@ -414,17 +427,17 @@ bool aiMove(sea_field& table, int intellectMode)
 {
 	int i, j;
 
+	while (true)
+	{
+		i = rand() % 10;
+		j = rand() % 10;
+
+		if (table.table[i][j] != 'X' && table.table[i][j] != '*')
+			break;
+	}
+
 	if (intellectMode == 1)
 	{
-		while (true)
-		{
-			i = rand() % 10;
-			j = rand() % 10;
-
-			if (table.table[i][j] != 'X' && table.table[i][j] != '*')
-				break;
-		}
-
 		if (table.table[i][j] == '#')
 		{
 			table.table[i][j] = 'X';
@@ -437,7 +450,24 @@ bool aiMove(sea_field& table, int intellectMode)
 			return false;
 		}
 	}
-	
+	else
+	{
+		while (true)
+		{
+			if (table.table[i][j] == '#')
+			{
+				table.table[i][j] = 'X';
+				int dir = destroyShipIfPossible(i, j, table);
+				directionalCoordinateMove(i, j, dir);
+			}
+			else
+			{
+				table.table[i][j] = '*';
+				return false;
+			}
+		}
+		return true;	
+	}
 }
 
 void printModTables(sea_field& tableOne, sea_field& tableTwo, int playerMode)
@@ -523,12 +553,18 @@ void gameLoop(int playerMode, int placementMode, int intellectMode)
 			Sleep(300);
 			std::cout << '.';
 		}
+		
+		if (allShipsDestroyed(tableOne))
+		{
+			std::cout << std::endl << "Игрок 2 победил!" << std::endl;
+			break;
+		}
+		else if (allShipsDestroyed(tableTwo))
+		{
+			std::cout << std::endl << "Игрок 1 победил!" << std::endl;
+			break;
+		}
 	}
-
-	if (allShipsDestroyed(tableOne))
-		std::cout << "Игрок 2 победил!" << std::endl;
-	else if (allShipsDestroyed(tableTwo))
-		std::cout << "Игрок 1 победил!" << std::endl;
 }
 
 int main()
@@ -548,8 +584,14 @@ int main()
 	std::string placementModeQuestion = "Выберите режим расстановки кораблей: \n";
 	std::string placementModeAuto = "1 - Автоматически\n";
 	std::string placementModeManually = "2 - Вручную\n";
+	std::string none = " ";
 
-	int placementMode = gameModeChoice(placementModeQuestion, placementModeAuto, placementModeManually);
+	int placementMode;
+
+	if (playerMode == 1)
+		placementMode = gameModeChoice(placementModeQuestion, placementModeAuto, placementModeManually);
+	else
+		placementMode = gameModeChoice(placementModeQuestion, placementModeAuto, none);
 	
 	std::string intellectModeQuestion = "Выберите уровень интеллекта компьютера: \n";
 	std::string intellectModeRandom = "1 - Случайные выстрелы\n";
