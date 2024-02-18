@@ -189,7 +189,10 @@ bool isShipSegmentPlaceable(int i, int j, sea_field& field)
 			if (v < 0 || v > 9 || b < 0 || b > 9)
 				continue;
 			if (field.table[v][b] == '#')
+			{
+				std::cout << "Ошибка, нельзя поставить корабль. Введите заново" << std::endl;
 				return false;
+			}
 		}
 	return true;
 }
@@ -242,7 +245,9 @@ void checkCoordinates(char& col, int& row)
 		if (std::cin.fail() || row < 1 || row > 10 || col < 'a' || col > 'j')
 		{
 			std::cout << "Некорректные координаты. Введите заново: " << std::endl;
-			ClearInput();
+			std::cin.clear();
+			std::cin.ignore();
+			Sleep(1000);
 			continue;
 		}
 		break;
@@ -314,6 +319,9 @@ void manualShipsPlacement(sea_field& field)
 				}
 
 				std::cout << "Некорректные координаты. Введите заново: " << std::endl;
+				std::cin.clear();
+				std::cin.ignore();
+				Sleep(1000);
 			}
 			shipsPrint(i, j, dir, shipSize, field);
 		}
@@ -348,18 +356,13 @@ void replaceWithMiss(int i, int j, sea_field& table)
 		}
 }
 
-int destroyShipIfPossible(int i, int j, sea_field& table)
+void destroyShipIfPossible(int i, int j, sea_field& table)
 {
-	enum intellect
-	{
-		intellUp, intellDown, intellLeft, intellRight
-	};
-
 	int up = i;
 	for (up = i; up >= 0; up--)
 	{
 		if (table.table[up][j] == '#')
-			return intellUp;
+			return;
 		if (table.table[up][j] == '*' || table.table[up][j] == '~')
 			break;
 	}
@@ -368,7 +371,7 @@ int destroyShipIfPossible(int i, int j, sea_field& table)
 	for (down = i; down < 10; down++)
 	{
 		if (table.table[down][j] == '#')
-			return intellDown;
+			return;
 		if (table.table[down][j] == '*' || table.table[down][j] == '~')
 			break;
 	}
@@ -377,7 +380,7 @@ int destroyShipIfPossible(int i, int j, sea_field& table)
 	for (left = j; left >= 0; left--)
 	{
 		if (table.table[i][left] == '#')
-			return intellLeft;
+			return;
 		if (table.table[i][left] == '*' || table.table[i][left] == '~')
 			break;
 	}
@@ -386,7 +389,7 @@ int destroyShipIfPossible(int i, int j, sea_field& table)
 	for (right = j; right < 10; right++)
 	{
 		if (table.table[i][right] == '#')
-			return intellRight;
+			return;
 		if (table.table[i][right] == '*' || table.table[i][right] == '~')
 			break;
 	}
@@ -451,23 +454,17 @@ bool aiMove(sea_field& table, int intellectMode)
 		}
 	}
 	else
-	{
 		while (true)
-		{
 			if (table.table[i][j] == '#')
 			{
 				table.table[i][j] = 'X';
-				int dir = destroyShipIfPossible(i, j, table);
+				int dir = rand() % 4;
+				destroyShipIfPossible(i, j, table);
 				directionalCoordinateMove(i, j, dir);
 			}
 			else
-			{
-				table.table[i][j] = '*';
-				return false;
-			}
-		}
-		return true;	
-	}
+				if (table.table[i][j] = '*')
+					return false;
 }
 
 void printModTables(sea_field& tableOne, sea_field& tableTwo, int playerMode)
