@@ -189,10 +189,7 @@ bool isShipSegmentPlaceable(int i, int j, sea_field& field)
 			if (v < 0 || v > 9 || b < 0 || b > 9)
 				continue;
 			if (field.table[v][b] == '#')
-			{
-				std::cout << "Ошибка, нельзя поставить корабль. Введите заново" << std::endl;
 				return false;
-			}
 		}
 	return true;
 }
@@ -246,7 +243,7 @@ void checkCoordinates(char& col, int& row)
 		{
 			std::cout << "Некорректные координаты. Введите заново: " << std::endl;
 			std::cin.clear();
-			std::cin.ignore();
+			std::cin.sync();
 			Sleep(1000);
 			continue;
 		}
